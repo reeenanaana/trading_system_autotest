@@ -18,4 +18,4 @@ driver.find_element(By.XPATH,"//input[@placeholder='密码']").send_keys("123456
 sleep(1)
 driver.find_element(By.XPATH,"//span[text()='登录']/parent::button").click()
 sleep(2)
-driver.quit()
+# driver.quit()
