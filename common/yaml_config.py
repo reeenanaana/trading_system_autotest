@@ -15,14 +15,15 @@ class GetConf:
         :param config_file: 配置文件名，默认 environment.yaml
         """
         # pathlib库的最大优点之一就是跨平台兼容。代码中的 / 操作符会被Python自动转换成当前系统（Windows、macOS、Linux）对应的路径分隔符，这是它的标准特性。
-        config_path = Path(__file__).parent.parent / "config" / config_file
-
+        config_path = get_project_path("trading_system_autotest") / "config" / config_file
         if not config_path.exists():
             raise FileNotFoundError(f"配置文件不存在: {config_path}")
 
         with open(config_path, 'r', encoding="utf-8") as env_file:
             self.env = yaml.full_load(env_file)  # full_load 等同于 load(..., FullLoader)
             # print(f"✅ 配置文件加载成功: {config_path}")
+
+        print(config_path)
 
     def get_username_password(self):
         return self.env['username'], self.env['password']
