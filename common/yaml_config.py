@@ -23,7 +23,7 @@ class GetConf:
             self.env = yaml.full_load(env_file)  # full_load 等同于 load(..., FullLoader)
             # print(f"✅ 配置文件加载成功: {config_path}")
 
-        print(config_path)
+        # print(config_path)
 
     def get_username_password(self):
         return self.env['username'], self.env['password']
