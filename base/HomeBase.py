@@ -23,4 +23,18 @@ class HomeBase:
         首页，欢迎您回来
         :return:
         """
-        return "//span[starts-with(text(),'欢迎您回来')]"    # 定位起始文本 starts-with(text(),'起始文本')
+        return "//span[starts-with(text(),'欢迎您回来')]"  # 定位起始文本 starts-with(text(),'起始文本')
+
+    def show_date(self):
+        """
+        首页显示日期
+        :return:
+        """
+        return "//div[@class='calender']/following-sibling::div"
+
+    def home_user_avatar(self):
+        """
+        首页用户头像大图
+        :return:
+        """
+        return "//span[contains(text(),"欢迎您回来")]/parent::div/preceding-sibling::div"
