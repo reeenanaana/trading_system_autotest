@@ -45,6 +45,7 @@ class ObjectMap:
             time.sleep(0.1)
         raise ElementNotVisibleException(f"元素定位失败，定位方式：{locate_type}, 定位表达式：{locator_expression}")
 
-
 # if __name__ == '__main__':
 #     ObjectMap().element_get()
+
+# DS老师修改代码：https://chat.deepseek.com/share/dla6wic4jwj178fps3
