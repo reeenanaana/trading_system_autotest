@@ -15,7 +15,7 @@ class LoginPage(LoginBase):
         :param driver:
         :param input_placeholder:
         :param input_value:
-        :return:
+        :return: 
         """
 
         input_xpath = self.login_input(input_placeholder)

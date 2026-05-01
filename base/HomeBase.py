@@ -37,7 +37,7 @@ class HomeBase:
         首页用户头像大图
         :return:
         """
-        return "//span[contains(text(),"欢迎您回来")]/parent::div/preceding-sibling::div"
+        return "//span[contains(text(),'欢迎您回来')]/parent::div/preceding-sibling::div"
 
     def home_user_avatar_2(self):
         """
