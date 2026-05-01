@@ -63,7 +63,7 @@ class ObjectMap:
             except WebDriverException:
                 # 如果有driver的错误，执行js会失败，就直接跳过
                 time.sleep(0.1)
-                pass
+                continue
             # 如果页面元素全部加载完成，返回True
             if ready_state == 'complete':
                 time.sleep(0.1)
