@@ -62,11 +62,11 @@ class ObjectMap:
                 ready_state = driver.execute_script("return document.readyState;")
             except WebDriverException:
                 # 如果有driver的错误，执行js会失败，就直接跳过
-                time.sleep(0.03)
-                return True
+                time.sleep(0.1)
+                pass
             # 如果页面元素全部加载完成，返回True
             if ready_state == 'complete':
-                time.sleep(0.01)
+                time.sleep(0.1)
                 return True
             else:
                 now_ms = time.time() * 1000
