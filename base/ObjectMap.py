@@ -5,7 +5,7 @@
 
 import time
 
-from selenium.common.exceptions import ElementNotVisibleException, WebDriverException
+from selenium.common.exceptions import ElementNotVisibleException, WebDriverException, NoSuchElementException
 
 
 class ObjectMap:
@@ -23,7 +23,7 @@ class ObjectMap:
         # 开始时间(13位的毫秒级时间戳)
         start_ms = time.time() * 1000
         # 设置的结束时间
-        stop_ms = start_ms + timeout * 1000
+        stop_ms = start_ms + (timeout * 1000)
         for x in range(int(timeout * 10)):
             # 查找元素
             try:
@@ -55,18 +55,18 @@ class ObjectMap:
         # 开始时间
         start_ms = time.time() * 1000
         # 设置的结束时间
-        stop_ms = start_ms + timeout * 1000
+        stop_ms = start_ms + (timeout * 1000)
         for x in range(int(timeout * 10)):
             try:
                 # 获取页面的状态
                 ready_state = driver.execute_script("return document.readyState;")
             except WebDriverException:
                 # 如果有driver的错误，执行js会失败，就直接跳过
-                time.sleep(0.03)
-                return True
+                time.sleep(0.1)
+                continue
             # 如果页面元素全部加载完成，返回True
             if ready_state == 'complete':
-                time.sleep(0.01)
+                time.sleep(0.1)
                 return True
             else:
                 now_ms = time.time() * 1000
@@ -75,7 +75,58 @@ class ObjectMap:
                     break
                 time.sleep(0.1)
         raise Exception(f"打开页面时，页面元素在{timeout}后仍然没有完全加载完。")
-# if __name__ == '__main__':
-#     ObjectMap().element_get()
 
-# DS老师修改代码：https://chat.deepseek.com/share/dla6wic4jwj178fps3
+    def element_disappear(self, driver, locate_type, locator_expression, timeout=30):
+        # 代码修改前后对比，见笔记Typora
+        """
+        等待页面元素消失
+        :param driver:浏览器驱动
+        :param locate_type:定位方式类型
+        :param locator_expression:定位表达式
+        :param timeout:超时时间
+        :return:
+        """
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                element = driver.find_element(by=locate_type, value=locator_expression)
+                # 元素存在且可见 → 继续等待
+                if element.is_displayed():
+                    time.sleep(0.1)
+                    continue
+                else:
+                    # 元素存在但不可见 → 认为已消失
+                    return True
+            except NoSuchElementException:
+                # 元素不存在 → 认为已消失
+                return True
+            except WebDriverException:
+                # driver 异常 → 继续等待
+                time.sleep(0.1)
+
+        raise Exception(f"元素没有消失，定位方式：{locate_type}，定位表达式：{locator_expression}")
+
+    def element_appear(self, driver, locate_type, locator_expression, timeout=30):
+        # DS老师分析原本的代码并修改成如下：https://chat.deepseek.com/share/1hosash4yg8ml2n3uj
+        """
+        等待页面元素出现并可见
+        :return: WebElement 对象
+        """
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            try:
+                element = driver.find_element(by=locate_type, value=locator_expression)
+                if element.is_displayed():
+                    return element
+                # 元素存在但不可见，继续等待
+                time.sleep(0.1)
+            except NoSuchElementException:
+                # 元素未找到，继续等待
+                time.sleep(0.1)
+            except WebDriverException:
+                # driver 异常，继续等待
+                time.sleep(0.1)
+
+        raise ElementNotVisibleException(
+            f"元素没有出现，定位方式：{locate_type}，定位表达式：{locator_expression}"
+        )
