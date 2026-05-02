@@ -23,15 +23,20 @@ class GetConf:
             self.env = yaml.full_load(env_file)  # full_load 等同于 load(..., FullLoader)
             # print(f"✅ 配置文件加载成功: {config_path}")
 
+        # print(self.env)
         # print(config_path)
 
     def get_username_password(self):
         return self.env['username'], self.env['password']
 
+    def get_url(self):
+        return self.env['url']
 
-if __name__ == '__main__':
-    print(GetConf().get_username_password())
+#
+# if __name__ == '__main__':
+#     print(GetConf().get_username_password())
 # 你的代码思路正确，主要需要改进：
 # 用 Path 替代硬编码路径
 # 用 safe_load/full_load() 替代 load
 # 添加异常处理
+

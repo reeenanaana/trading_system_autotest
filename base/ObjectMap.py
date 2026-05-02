@@ -7,8 +7,12 @@ import time
 
 from selenium.common.exceptions import ElementNotVisibleException, WebDriverException, NoSuchElementException
 
+from common.yaml_config import GetConf
+
 
 class ObjectMap:
+    # 获取基准地址
+    url = GetConf().get_url()
 
     def element_get(self, driver, locate_type, locator_expression, timeout=10, must_be_visible=False):
         """
@@ -86,6 +90,8 @@ class ObjectMap:
         :param timeout:超时时间
         :return:
         """
+        if locate_type is None:
+            return True
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
@@ -112,6 +118,8 @@ class ObjectMap:
         等待页面元素出现并可见
         :return: WebElement 对象
         """
+        if locate_type is None:
+            return True
         start_time = time.time()
         while time.time() - start_time < timeout:
             try:
@@ -130,3 +138,44 @@ class ObjectMap:
         raise ElementNotVisibleException(
             f"元素没有出现，定位方式：{locate_type}，定位表达式：{locator_expression}"
         )
+
+    def element_to_url(
+            self,
+            driver,
+            url,
+            locate_type_disappear=None,
+            locator_expression_disappear=None,
+            locate_type_appear=None,
+            locator_expression_appear=None,
+            timeout=30):
+        """
+        跳转地址
+        :param driver: 浏览器驱动
+        :param url: 跳转的地址
+        :param locate_type_disappear: 等待页面元素消失的定位方式
+        :param locator_expression_disappear: 等待页面元素消失的定位表达式
+        :param locate_type_appear: 等待页面元素出现的定位方式
+        :param locator_expression_appear: 等待页面元素出现的定位表达式
+        :param timeout:
+        :return:
+        """
+        try:
+            driver.get(self.url + url)  # "https://www.example.com/login"
+            # 等待页面元素都加载完成
+            self.wait_for_ready_state_complete(driver)
+            # 跳转地址后等待元素消失
+            self.element_disappear(
+                driver,
+                locate_type_disappear,
+                locator_expression_disappear
+            )
+            # 跳转地址后等待元素出现
+            self.element_appear(
+                driver,
+                locate_type_appear,
+                locator_expression_appear
+            )
+        except Exception as e:
+            print(f"跳转地址出现异常，异常原因：{e}")
+            return False
+        return True
