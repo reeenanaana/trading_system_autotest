@@ -266,4 +266,79 @@ class ObjectMap:
 
         return True
 
+    def element_click(
+            self,
+            driver,
+            locate_type,
+            locator_expression,
+            locate_type_disappear=None,
+            locator_expression_disappear=None,
+            locate_type_appear=None,
+            locator_expression_appear=None,
+            timeout=30
+    ):
+        """
+        点击元素，并在点击后等待指定元素出现/消失
 
+        :param driver:浏览器驱动
+        :param locate_type:定位方式类型
+        :param locator_expression:定位表达式
+        :param locate_type_disappear:等待元素消失的定位方式类型
+        :param locator_expression_disappear:等待元素消失的定位表达式
+        :param locate_type_appear:等待元素出现的定位方式类型
+        :param locator_expression_appear:等待元素出现的定位表达式
+        :param timeout:超时时间（秒）
+        :return: bool，点击成功返回True，失败返回False
+        """
+        # 参数校验：必填参数不能为空
+        if not all([locate_type, locator_expression]):
+            raise ValueError("locate_type 和 locator_expression 为必填参数")
+
+        # 重试次数，处理元素过时异常
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                # 等待元素可见
+                element = self.element_appear(
+                    driver=driver,
+                    locate_type=locate_type,
+                    locator_expression=locator_expression,
+                    timeout=timeout
+                )
+                # 点击元素
+                element.click()
+                break  # 点击成功，跳出重试循环
+            except StaleElementReferenceException:
+                if attempt == max_retries - 1:
+                    print(f"元素在 {max_retries} 次重试后仍然过时，点击失败")
+                    return False
+                # 等待页面稳定后重试
+                self.wait_for_ready_state_complete(driver=driver)
+                time.sleep(0.1)
+                continue
+            except Exception as e:
+                print(f"页面出现异常，元素不可点击：{e}")
+                return False
+
+        # 点击后的元素出现/消失校验（仅当参数提供时执行）
+        try:
+            if locate_type_appear and locator_expression_appear:
+                self.element_appear(
+                    driver,
+                    locate_type_appear,
+                    locator_expression_appear,
+                    timeout=timeout
+                )
+
+            if locate_type_disappear and locator_expression_disappear:
+                self.element_disappear(
+                    driver,
+                    locate_type_disappear,
+                    locator_expression_disappear,
+                    timeout=timeout
+                )
+        except Exception as e:
+            print(f"等待元素消失或出现失败：{e}")
+            return False
+
+        return True
