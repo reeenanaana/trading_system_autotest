@@ -5,7 +5,9 @@
 
 import time
 
-from selenium.common.exceptions import ElementNotVisibleException, WebDriverException, NoSuchElementException
+from selenium.common.exceptions import ElementNotVisibleException, WebDriverException, NoSuchElementException, \
+    StaleElementReferenceException
+from selenium.webdriver.common.keys import Keys
 
 from common.yaml_config import GetConf
 
@@ -136,7 +138,7 @@ class ObjectMap:
                 time.sleep(0.1)
 
         raise ElementNotVisibleException(
-            f"元素没有出现，定位方式：{locate_type}，定位表达式：{locator_expression}"
+            f"元素没有 出现，定位方式：{locate_type}，定位表达式：{locator_expression}"
         )
 
     def element_to_url(
@@ -179,3 +181,89 @@ class ObjectMap:
             print(f"跳转地址出现异常，异常原因：{e}")
             return False
         return True
+
+    def element_is_display(self, driver, locate_type, locator_expression):
+        """
+        元素是否显示（可用于断言是否找到了元素，区别于之前element_appear的方法，该方法如果未找到元素抛出错误）
+        :param driver:
+        :param locate_type:
+        :param locator_expression:
+        :return:
+        """
+        try:
+            driver.find_element(by=locate_type, value=locator_expression).is_displayed()
+            return True
+        except NoSuchElementException:
+            # 发生了NoSuchElementException异常，说明页面中未找到该元素，返回false
+            return False
+
+    def element_fill_value(self, driver, locate_type, locator_expression, fill_value, timeout=30):
+        """
+        元素填值
+        :param driver: 浏览器驱动
+        :param locate_type: 定位方式
+        :param locator_expression: 定位表达式
+        :param fill_value: 填入的值
+        :param timeout: 超时时间
+        :return: bool
+        """
+        fill_value = str(fill_value)  # 统一转为字符串
+
+        def get_element():
+            """获取元素，支持重试"""
+            return self.element_appear(
+                driver,
+                locate_type=locate_type,
+                locator_expression=locator_expression,
+                timeout=timeout
+            )
+
+        def clear_element(element):
+            """清除元素内容，处理StaleElementReferenceException"""
+            try:
+                element.clear()
+                return True
+            except StaleElementReferenceException:
+                self.wait_for_ready_state_complete(driver)
+                time.sleep(0.1)
+                new_element = get_element()
+                try:
+                    new_element.clear()
+                    return True
+                except Exception:
+                    return False
+            except Exception:
+                return False
+
+        def send_value(element, value):
+            """发送值，支持回车提交"""
+            self.wait_for_ready_state_complete(driver)
+            if value.endswith("\n"):
+                element.send_keys(value[:-1])
+                element.send_keys(Keys.RETURN)
+            else:
+                element.send_keys(value)
+            self.wait_for_ready_state_complete(driver)
+
+        # 获取元素
+        element = get_element()
+
+        # 清除原有值
+        clear_element(element)
+
+        # 重新获取元素（避免清除后元素失效）
+        try:
+            element = get_element()
+            send_value(element, fill_value)
+        except StaleElementReferenceException:
+            self.wait_for_ready_state_complete(driver)
+            time.sleep(0.1)
+            element = get_element()
+            clear_element(element)
+            send_value(element, fill_value)
+        except Exception as e:
+            raise Exception(f"元素填值失败: {locator_expression}, 错误: {e}")
+
+        return True
+
+
