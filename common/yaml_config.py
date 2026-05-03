@@ -26,17 +26,17 @@ class GetConf:
         # print(self.env)
         # print(config_path)
 
-    def get_username_password(self):
-        return self.env['username'], self.env['password']
+    def get_username_password(self, user):
+        # return self.env['username'], self.env['password']
+        return self.env["user"][user]["username"], self.env["user"][user]["password"]
 
     def get_url(self):
         return self.env['url']
 
-#
-# if __name__ == '__main__':
-#     print(GetConf().get_username_password())
+
+if __name__ == '__main__':
+    print(GetConf().get_username_password("william"))
 # 你的代码思路正确，主要需要改进：
 # 用 Path 替代硬编码路径
 # 用 safe_load/full_load() 替代 load
 # 添加异常处理
-
