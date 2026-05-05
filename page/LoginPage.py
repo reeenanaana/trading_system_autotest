@@ -21,7 +21,7 @@ class LoginPage(LoginBase, ObjectMap):
         :return:
         """
 
-        input_xpath = self.login_input(input_placeholder)
+        input_xpath = self.login_input(input_placeholder)   # xpath定位表达式
         # driver.find_element(By.XPATH, input_xpath).send_keys(input_value)
         return self.element_fill_value(driver, By.XPATH, input_xpath, input_value)
 

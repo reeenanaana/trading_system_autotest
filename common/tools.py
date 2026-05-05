@@ -48,7 +48,16 @@ def get_project_path(project_name: str) -> Path:
     return Path(__file__).parent.parent
 
 
-#
+def get_img_path(img_name):
+    """
+    获取商品图片的路径
+    :param img_name:
+    :return:
+    """
+    img_dir_path = get_project_path(project_name='trading_system_autotest') / 'img' / img_name
+    return str(img_dir_path)  # 2026.5.4修改 ObjectMap().upload()方法的必参file_path必须为str
+
+
 # def get_img_path(img_name):
 #     """
 #     获取商品图片的路径
@@ -80,3 +89,4 @@ def get_project_path(project_name: str) -> Path:
 #     # "/Users/fengzhaoxi/imooc/code/trading_system_autotest/common"
 #     # sep(["config", "environment.yaml"], add_sep_before=True)
 #     print(get_every_wallpaper())
+#     print(get_img_path('商品图片1一'))

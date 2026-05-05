@@ -342,3 +342,15 @@ class ObjectMap:
             return False
 
         return True
+
+    def upload(self, driver, locate_type, locator_expression, file_path):
+        """
+        文件上传
+        :param driver:浏览器驱动
+        :param locate_type:定位方式
+        :param locator_expression:定位表达式
+        :param file_path:文件路径
+        :return:
+        """
+        element = self.element_get(driver, locate_type, locator_expression)
+        return element.send_keys(file_path)
