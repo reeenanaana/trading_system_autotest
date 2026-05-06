@@ -12,8 +12,8 @@ from page.OrderPage import OrderPage
 
 
 class TestOrderPurchaseList():
-    def test_order_purchase_list(self):
-        driver = DriverConfig().driver_config()
+    def test_order_purchase_list(self, driver):
+        # driver = DriverConfig().driver_config()
         LoginPage().login(driver, 'william')
         LeftMenuPage().click_level_one_menu(driver, "我的订单")
         sleep(1)
@@ -23,4 +23,4 @@ class TestOrderPurchaseList():
         for tab_name in tab_list:
             OrderPage().click_order_tab(driver, tab_name)
             sleep(1)
-        driver.quit()
+        # driver.quit()

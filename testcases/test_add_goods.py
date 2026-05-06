@@ -5,20 +5,12 @@
 
 from time import sleep
 
-import pytest
-
-from config.driver_config import DriverConfig
 from page.LoginPage import LoginPage
 from page.LeftMenuPage import LeftMenuPage
 from page.GoodsPage import GoodsPage
 
 
 class TestAddGoods:
-    @pytest.fixture()
-    def driver(self):
-        get_driver = DriverConfig().driver_config()
-        yield get_driver
-        get_driver.quit()
 
     def test_add_goods_1(self, driver):
         # driver = DriverConfig().driver_config()
