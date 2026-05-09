@@ -9,7 +9,8 @@ import pytest
 
 
 class TestRerun:
-    @pytest.mark.flaky(reruns=5, reruns_delay=1)
+    # @pytest.mark.flaky(reruns=5, reruns_delay=1)
+    # 上面的rerun和pytest.ini文件中的pytest.xdist会有冲突，所以注释掉了
     def test_rerun(self):
         num = random.randint(1, 3)
         print(num)
