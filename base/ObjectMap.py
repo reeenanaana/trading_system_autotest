@@ -138,7 +138,7 @@ class ObjectMap:
                 time.sleep(0.1)
 
         raise ElementNotVisibleException(
-            f"元素没有 出现，定位方式：{locate_type}，定位表达式：{locator_expression}"
+            f"元素没有出现，定位方式：{locate_type}，定位表达式：{locator_expression}"
         )
 
     def element_to_url(
