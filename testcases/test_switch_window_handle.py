@@ -5,7 +5,7 @@
 
 from time import sleep
 
-from config.driver_config import DriverConfig
+# from config.driver_config import DriverConfig
 from page.ExternalLinkPage import ExternalLinkPage
 from page.LeftMenuPage import LeftMenuPage
 from page.LoginPage import LoginPage

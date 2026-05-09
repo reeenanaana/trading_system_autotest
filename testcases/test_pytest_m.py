@@ -26,7 +26,7 @@ class TestPytestMClass:
         # driver = DriverConfig().driver_config()
         driver.get("https://www.bilibili.com/")
         sleep(3)
-        driver.quit()
+        # driver.quit()
 
     @pytest.mark.baidu
     def test_open_baidu(self, driver, scope_class):
@@ -34,11 +34,11 @@ class TestPytestMClass:
         # driver = DriverConfig().driver_config()
         driver.get("https://www.baidu.com")
         sleep(3)
-        driver.quit()
+        # driver.quit()
 
     @pytest.mark.google
     def test_open_google(self, driver, scope_class):
         # driver = DriverConfig().driver_config()
         driver.get("https://www.google.com")
         sleep(3)
-        driver.quit()
+        # driver.quit()

@@ -20,7 +20,7 @@ class DriverConfig:
         service = Service(service_path)
         # 如果浏览器的版本更换了，chromedriver就需要重新下载，可能会导致浏览器驱动失败
         # service = Service(ChromeDriverManager(url="https://registry.npmmirror.com/-/binary/chromedriver/",
-                                              # latest_release_url='https://registry.npmmirror.com/-/binary/chromedriver/LATEST_RELEASE').install())
+        # latest_release_url='https://registry.npmmirror.com/-/binary/chromedriver/LATEST_RELEASE').install())
 
         chrome_options = Options()
         #   设置窗口大小1920*1080

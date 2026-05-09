@@ -1,11 +1,11 @@
-#! /usr/bin/python3
-# coding = utf-8
-# @Time: 2026/4/28 15:18
-# @Author: Rena
-
-"""
-验证 Selenium 环境和浏览器驱动是否能正常工作
-"""
+# #! /usr/bin/python3
+# # coding = utf-8
+# # @Time: 2026/4/28 15:18
+# # @Author: Rena
+#
+# """
+# 验证 Selenium 环境和浏览器驱动是否能正常工作
+# """
 #
 # from time import sleep
 #
