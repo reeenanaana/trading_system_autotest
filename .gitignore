@@ -10,3 +10,4 @@ test.log
 venv/
 env/
 ENV/
+report.html
