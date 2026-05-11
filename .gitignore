@@ -5,4 +5,8 @@ __pycache__
 labs
 UIreport
 test.log
-.venv
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
