@@ -43,6 +43,8 @@ class DriverConfig:
         chrome_options.add_argument("--disable-gpu")
         #   解决卡顿3：禁用 / dev / shm（共享内存），解决Docker容器中内存不足导致浏览器崩溃的问题
         chrome_options.add_argument("--disable-dev-shm-usage")
+        # #   关键：禁用 BiDi
+        # chrome_options.set_capability("webSocketUrl", False)
 
         driver = webdriver.Chrome(service=service, options=chrome_options)
         # 删除所有cookies

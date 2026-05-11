@@ -58,6 +58,25 @@ def get_img_path(img_name):
     return str(img_dir_path)  # 2026.5.4修改 ObjectMap().upload()方法的必参file_path必须为str
 
 
+def get_screenshot_path(img_name):
+    """
+    图像识别时，获取截图的路径
+    :param img_name:
+    :return:
+    """
+    screenshot_dir_path = get_project_path(project_name='trading_system_autotest') / 'img' / 'screenshots' / img_name
+    return str(screenshot_dir_path)
+
+
+def get_target_img_path(img_name):
+    """
+    图像识别是，获取需要查找的图片的路径
+    :param img_name:
+    :return:
+    """
+    target_img_path = get_project_path(project_name='trading_system_autotest') / 'img' / 'target_imgs' / img_name
+    return str(target_img_path)
+
 # def get_img_path(img_name):
 #     """
 #     获取商品图片的路径
@@ -90,3 +109,4 @@ def get_img_path(img_name):
 #     # sep(["config", "environment.yaml"], add_sep_before=True)
 #     print(get_every_wallpaper())
 #     print(get_img_path('商品图片1一'))
+#     print(get_target_img_path('周杰伦头像截图.png'))

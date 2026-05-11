@@ -10,6 +10,8 @@ from selenium.common.exceptions import ElementNotVisibleException, WebDriverExce
 from selenium.webdriver.common.keys import Keys
 
 from common.yaml_config import GetConf
+from common.tools import get_screenshot_path, get_target_img_path
+from common.find_img import FindImg
 
 
 class ObjectMap:
@@ -382,3 +384,21 @@ class ObjectMap:
         """
         window_handles = driver.window_handles
         driver.switch_to.window(window_handles[-1])
+
+    def find_img_in_screenshot(self, driver, img_name):
+        """
+        截图并在截图中查找图片
+        :param driver:
+        :param img_name:
+        :return:
+        """
+        # 截图后图片保存的路径（大图）
+        screenshot_path = get_screenshot_path(img_name)
+        # 需要查找的图片的路径
+        target_img_path = get_target_img_path(img_name)
+        # 截图后保存图片到screenshot_path路径下
+        driver.save_screenshot(screenshot_path)
+        time.sleep(3)
+        # 在截图中查找是否有指定的图片，返回信心值
+        confidence = FindImg().get_confidence(screenshot_path, target_img_path)
+        return confidence
