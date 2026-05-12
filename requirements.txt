@@ -1,0 +1,10 @@
+# 核心测试框架
+pytest==8.4.2
+pytest-xdist==3.8.0
+allure-pytest==2.16.0
+
+# Web 自动化
+selenium==4.15.0
+
+# 可选：如果需要 WebDriver 自动管理（推荐）
+webdriver-manager==4.0.1
