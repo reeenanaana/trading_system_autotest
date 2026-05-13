@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from base.LoginBase import LoginBase
 from base.ObjectMap import ObjectMap
 from common.yaml_config import GetConf
+from logs.log import log
 
 
 # 继承了LoginBase（元素定位）, ObjectMap（SE二次封装）
@@ -20,7 +21,7 @@ class LoginPage(LoginBase, ObjectMap):
         :param input_value:
         :return:
         """
-
+        log.info("输入" + input_placeholder + "为" + str(input_value))
         input_xpath = self.login_input(input_placeholder)  # xpath定位表达式
         # driver.find_element(By.XPATH, input_xpath).send_keys(input_value)
         return self.element_fill_value(driver, By.XPATH, input_xpath, input_value)
@@ -32,6 +33,7 @@ class LoginPage(LoginBase, ObjectMap):
         :param button_name:
         :return:
         """
+        log.info("点击登录")
         button_xpath = self.login_button(button_name)
         # driver.find_element(By.XPATH, button_xpath).click()
         return self.element_click(driver, By.XPATH, button_xpath)
