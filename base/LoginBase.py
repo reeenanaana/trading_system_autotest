@@ -20,6 +20,13 @@ class LoginBase:
         """
         return f"//span[text()='{input_placeholder}']/parent::button"
 
+    def login_success(self):
+        """
+        登录成功的标签提示
+        :return:
+        """
+        return "//p[text()='登录成功']"
+
 
 if __name__ == '__main__':
     print(LoginBase().login_input("用户名"))  # 输出: //input[@placeholder='用户名']

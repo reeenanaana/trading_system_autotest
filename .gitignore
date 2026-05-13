@@ -11,3 +11,5 @@ venv/
 env/
 ENV/
 report.html
+UIreport
+test.log
