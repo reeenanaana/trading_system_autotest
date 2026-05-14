@@ -4,13 +4,14 @@
 # @Author: Rena
 
 import time
+import datetime
 
 from selenium.common.exceptions import ElementNotVisibleException, WebDriverException, NoSuchElementException, \
     StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 
 from common.yaml_config import GetConf
-from common.tools import get_screenshot_path, get_target_img_path
+from common.tools import get_screenshot_path, get_target_img_path, get_ele_screenshot_path
 from common.find_img import FindImg
 
 
@@ -402,3 +403,19 @@ class ObjectMap:
         # 在截图中查找是否有指定的图片，返回信心值
         confidence = FindImg().get_confidence(screenshot_path, target_img_path)
         return confidence
+
+    def element_screenshot(self, driver, locate_type, locator_expression):
+        """
+        元素截图并保存到指定路径
+        :param driver:
+        :param locate_type:
+        :param locator_expression:
+        :return:
+        """
+        ele_screenshot_name = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + ".png"
+        ele_screenshot_path = get_ele_screenshot_path(ele_screenshot_name)
+        self.element_get(driver, locate_type, locator_expression).screenshot(ele_screenshot_path)
+        return ele_screenshot_path
+        # screenshot() 方法的作用
+        # element.screenshot(ele_screenshot_path) 是 Selenium WebDriver 中
+        # WebElement 对象的一个方法，用于截取特定网页元素的截图并保存到本地文件。

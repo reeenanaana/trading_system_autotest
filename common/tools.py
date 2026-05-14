@@ -60,7 +60,7 @@ def get_img_path(img_name):
 
 def get_screenshot_path(img_name):
     """
-    图像识别时，获取截图的路径
+    图像识别时，存放截图的路径
     :param img_name:
     :return:
     """
@@ -70,38 +70,35 @@ def get_screenshot_path(img_name):
 
 def get_target_img_path(img_name):
     """
-    图像识别是，获取需要查找的图片的路径
+    图像识别时，存放需要查找的图片的路径
     :param img_name:
     :return:
     """
     target_img_path = get_project_path(project_name='trading_system_autotest') / 'img' / 'target_imgs' / img_name
     return str(target_img_path)
 
-# def get_img_path(img_name):
-#     """
-#     获取商品图片的路径
-#     :param img_name:
-#     :return:
-#     """
-#     img_dir_path = get_project_path() + sep(["img", img_name], add_sep_before=True)
-#     return img_dir_path
-#
-#
-# def get_every_wallpaper():
-#     """
-#     从bing获取每日壁纸
-#     :return:
-#     """
-#     everyday_wallpaper_url = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=10&mkt=zh-CN"
-#     try:
-#         res = requests.get(url=everyday_wallpaper_url)
-#         wallpaper_url = "https://cn.bing.com" + res.json()["images"][0]["url"][:-7]
-#     except Exception as e:
-#         print(e)
-#         wallpaper_url = ""
-#     return wallpaper_url
-#
-#
+
+def get_ele_screenshot_path(ele_screenshot_name):
+    """
+    元素截图的存放路径
+    :param ele_screenshot_name:
+    :return:
+    """
+    # 获取目录路径
+    screenshot_dir = get_project_path('trading_system_autotest') / 'img' / 'ele_screenshots'
+    # 只创建目录（不包含文件名）
+    screenshot_dir.mkdir(parents=True, exist_ok=True)
+    # 返回完整文件路径
+    return str(screenshot_dir / ele_screenshot_name)
+
+# ele_screenshot_path = get_project_path('trading_system_autotest') / 'img' / 'ele_screenshots' / ele_screenshot_name
+# ele_screenshot_path.mkdir(parents=True, exist_ok=True)
+# return str(ele_screenshot_path)
+# ele_screenshot_path 是一个完整的文件路径（包含文件名）
+# 但 mkdir() 方法会创建一个目录
+# 当文件名没有扩展名或格式特殊时，可能创建了一个同名目录
+# 后续 screenshot() 试图把文件写入一个已存在的目录时，就会报 IsADirectoryError
+
 # if __name__ == '__main__':
 #     # print(get_now_time())
 #     # print(get_project_path())

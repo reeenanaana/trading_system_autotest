@@ -13,3 +13,5 @@ ENV/
 report.html
 UIreport
 test.log
+logs/all_logs/*.log
+logs/all_logs/

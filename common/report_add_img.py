@@ -23,3 +23,13 @@ def add_img_to_report(driver, step_name, need_sleep=True):
         step_name + ".png",
         allure.attachment_type.PNG
     )
+
+
+def add_specific_img_to_report(img_path, step_name,):
+    """
+    通过指定路径将图片插入Allure报告
+    :param img_path:图片存放路径
+    :param step_name:步骤名称
+    :return:
+    """
+    allure.attach.file(img_path, step_name, allure.attachment_type.PNG)
