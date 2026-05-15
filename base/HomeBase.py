@@ -45,3 +45,10 @@ class HomeBase:
         :return:
         """
         return "//span[text()='我的地址']/ancestor::div[@class='first_card']/div[contains(@class,'avatar')]//img"
+
+    def user_balance(self):
+        """
+        首页-账户余额
+        :return:
+        """
+        return "//th[text()='账户余额']/parent::tr/following-sibling::tr/td[1]"
