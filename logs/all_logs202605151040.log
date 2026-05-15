@@ -1,0 +1,5 @@
+2026-05-15 10:40:31 - LoginPage.py - LoginPage - api_login - 115 - INFO - 跳转登录页
+2026-05-15 10:40:31 - LoginPage.py - LoginPage - api_login - 118 - INFO - 用户名：+ 周杰伦
+2026-05-15 10:40:31 - LoginPage.py - LoginPage - api_login - 119 - INFO - 密码 + 123456
+2026-05-15 10:40:31 - LoginPage.py - LoginPage - api_login - 125 - INFO - 通过api登录
+2026-05-15 10:40:31 - LoginPage.py - LoginPage - api_login - 129 - INFO - 将token写入sessionstorage

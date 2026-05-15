@@ -1,8 +1,0 @@
-2026-05-14 13:12:51 - LoginPage.py - LoginPage - login - 52 - INFO - 跳转登录页
-2026-05-14 13:12:55 - LoginPage.py - LoginPage - login - 57 - INFO - 需要验证码
-2026-05-14 13:12:55 - LoginPage.py - LoginPage - select_need_captcha - 103 - INFO - 点击勾选是否需要验证码
-2026-05-14 13:12:55 - LoginPage.py - LoginPage - login - 67 - INFO - 成功识别验证码为: kzq2
-2026-05-14 13:12:55 - LoginPage.py - LoginPage - login - 70 - INFO - 添入验证码
-2026-05-14 13:12:59 - LoginPage.py - LoginPage - login_input_value - 27 - INFO - 输入用户名为周杰伦
-2026-05-14 13:12:59 - LoginPage.py - LoginPage - login_input_value - 27 - INFO - 输入密码为123456
-2026-05-14 13:13:00 - LoginPage.py - LoginPage - click_login - 39 - INFO - 点击登录

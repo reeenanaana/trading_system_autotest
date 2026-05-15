@@ -1,0 +1,12 @@
+2026-05-15 10:58:50 - LoginPage.py - LoginPage - api_login - 115 - INFO - 跳转登录页
+2026-05-15 10:58:50 - LoginPage.py - LoginPage - api_login - 118 - INFO - 用户名：+ 周杰伦
+2026-05-15 10:58:50 - LoginPage.py - LoginPage - api_login - 119 - INFO - 密码 + 123456
+2026-05-15 10:58:50 - LoginPage.py - LoginPage - api_login - 125 - INFO - 通过api登录
+2026-05-15 10:58:50 - LoginPage.py - LoginPage - api_login - 129 - INFO - 将token写入sessionstorage
+2026-05-15 10:58:52 - LoginPage.py - LoginPage - api_login - 132 - INFO - 跳转主页
+2026-05-15 10:58:58 - LoginPage.py - LoginPage - api_login - 115 - INFO - 跳转登录页
+2026-05-15 10:58:58 - LoginPage.py - LoginPage - api_login - 118 - INFO - 用户名：+ william
+2026-05-15 10:58:58 - LoginPage.py - LoginPage - api_login - 119 - INFO - 密码 + 123456
+2026-05-15 10:58:58 - LoginPage.py - LoginPage - api_login - 125 - INFO - 通过api登录
+2026-05-15 10:58:58 - LoginPage.py - LoginPage - api_login - 129 - INFO - 将token写入sessionstorage
+2026-05-15 10:59:00 - LoginPage.py - LoginPage - api_login - 132 - INFO - 跳转主页
