@@ -10,3 +10,10 @@ user:
     password: 123456
 
 url: http://192.168.64.1
+
+mysql:
+  db: trading_system
+  host: 192.168.64.1
+  password: william
+  port: 3307
+  user: root
