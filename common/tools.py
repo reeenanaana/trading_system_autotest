@@ -91,6 +91,20 @@ def get_ele_screenshot_path(ele_screenshot_name):
     # 返回完整文件路径
     return str(screenshot_dir / ele_screenshot_name)
 
+
+def get_diff_img_path(diff_img_name):
+    """
+    diff图片的存放路径
+    :param diff_img_name:截图后对比找到目标图片后，圈中目标图片的最终图
+    :return:
+    """
+    # 获取目录路径
+    diff_img_dir = get_project_path('trading_system_autotest') / 'img' / 'diff_img'
+    # 只创建目录（不包含文件名）
+    diff_img_dir.mkdir(parents=True, exist_ok=True)
+    # 返回完整文件路径
+    return str(diff_img_dir / diff_img_name)
+
 # ele_screenshot_path = get_project_path('trading_system_autotest') / 'img' / 'ele_screenshots' / ele_screenshot_name
 # ele_screenshot_path.mkdir(parents=True, exist_ok=True)
 # return str(ele_screenshot_path)
@@ -100,10 +114,12 @@ def get_ele_screenshot_path(ele_screenshot_name):
 # 后续 screenshot() 试图把文件写入一个已存在的目录时，就会报 IsADirectoryError
 
 # if __name__ == '__main__':
-#     # print(get_now_time())
+# # print(get_now_time())
 #     # print(get_project_path())
 #     # "/Users/fengzhaoxi/imooc/code/trading_system_autotest/common"
 #     # sep(["config", "environment.yaml"], add_sep_before=True)
 #     print(get_every_wallpaper())
 #     print(get_img_path('商品图片1一'))
 #     print(get_target_img_path('周杰伦头像截图.png'))
+#     print(type(get_now_date_time_str()))
+#     print(get_diff_img_path('对比的图.png'))

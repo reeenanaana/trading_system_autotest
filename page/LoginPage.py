@@ -77,14 +77,16 @@ class LoginPage(LoginBase, ObjectMap):
         self.click_login(driver, "登录")
         self.assert_login_success(driver)
 
-    def login_avatar_assert(self, driver, img_name):
+    def login_avatar_assert(self, driver, screenshot_name, target_img_name):
         """
         登录后判断头像
         :param driver:
-        :param img_name:
+        :param screenshot_name:
+        :param target_img_name:
         :return:
         """
-        return self.find_img_in_screenshot(driver, img_name)
+        log.info("登录后判断头像")
+        return self.find_img_in_screenshot(driver, screenshot_name, target_img_name)
 
     def assert_login_success(self, driver):
         """

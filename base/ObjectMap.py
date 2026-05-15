@@ -13,6 +13,7 @@ from selenium.webdriver.common.keys import Keys
 from common.yaml_config import GetConf
 from common.tools import get_screenshot_path, get_target_img_path, get_ele_screenshot_path
 from common.find_img import FindImg
+from common.report_add_img import add_specific_img_to_report
 
 
 class ObjectMap:
@@ -386,20 +387,25 @@ class ObjectMap:
         window_handles = driver.window_handles
         driver.switch_to.window(window_handles[-1])
 
-    def find_img_in_screenshot(self, driver, img_name):
+    def find_img_in_screenshot(self, driver, screenshot_name, target_img_name):
         """
         截图并在截图中查找图片
         :param driver:
-        :param img_name:
+        :param screenshot_name:
+        :param target_img_name:
         :return:
         """
+        # 20260515 screenshot_path和target_img_path传同一个参数很奇怪，
+        # 20260515 最后出来的截图的名字和周杰伦头像截图.png，所以改成传2个参了
         # 截图后图片保存的路径（大图）
-        screenshot_path = get_screenshot_path(img_name)
+        screenshot_path = get_screenshot_path(screenshot_name)
         # 需要查找的图片的路径
-        target_img_path = get_target_img_path(img_name)
+        target_img_path = get_target_img_path(target_img_name)
         # 截图后保存图片到screenshot_path路径下
         driver.save_screenshot(screenshot_path)
         time.sleep(3)
+        add_specific_img_to_report(screenshot_path, "截图")
+        add_specific_img_to_report(target_img_path, "目标图片")
         # 在截图中查找是否有指定的图片，返回信心值
         confidence = FindImg().get_confidence(screenshot_path, target_img_path)
         return confidence
