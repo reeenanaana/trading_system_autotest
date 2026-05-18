@@ -28,13 +28,13 @@ class FindImg:
         img_src = self.img_imread(screenshot_path)
         img_tar = self.img_imread(target_img_path)
         result = ac.find_template(img_src, img_tar)
-        # print(result)
-        cv2.rectangle(
-            img_src, result['rectangle'][0],
-            result['rectangle'][3], (255, 0, 0), 2
-        )
+        if not result:
+            return 0
+        # aircv 返回的 rectangle 四个点顺序为：左上、右上、右下、左下；cv2.rectangle 需要 左上+右下
+        cv2.rectangle(img_src, result["rectangle"][0], result["rectangle"][2], (255, 0, 0), 2)
         diff_img_path = get_diff_img_path(f"{get_now_date_time_str()}-对比的图.png")
-        # 下面这句啥意思撒
+        # 把已经高亮了目标图片的截图，编码成 PNG 格式的 NumPy 字节数组，然后使用 NumPy 的 .tofile()方法，
+        # 将该数组原样写入指定路径，生成最终的对比截图文件
         cv2.imencode(".png", img_src)[1].tofile(diff_img_path)
         add_specific_img_to_report(diff_img_path, "查找到的图")
         return result['confidence']
