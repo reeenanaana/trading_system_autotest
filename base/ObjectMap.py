@@ -5,13 +5,14 @@
 
 import time
 import datetime
+from pathlib import Path
 
 from selenium.common.exceptions import ElementNotVisibleException, WebDriverException, NoSuchElementException, \
     StaleElementReferenceException
 from selenium.webdriver.common.keys import Keys
 
 from common.yaml_config import GetConf
-from common.tools import get_screenshot_path, get_target_img_path, get_ele_screenshot_path
+from common.tools import get_screenshot_path, get_target_img_path, get_ele_screenshot_path, get_now_date_time_str
 from common.find_img import FindImg
 from common.report_add_img import add_specific_img_to_report
 
@@ -314,15 +315,13 @@ class ObjectMap:
                 break  # 点击成功，跳出重试循环
             except StaleElementReferenceException:
                 if attempt == max_retries - 1:
-                    print(f"元素在 {max_retries} 次重试后仍然过时，点击失败")
-                    return False
+                    raise StaleElementReferenceException(f"元素在 {max_retries} 次重试后仍然过时，点击失败")
                 # 等待页面稳定后重试
                 self.wait_for_ready_state_complete(driver=driver)
                 time.sleep(0.1)
                 continue
             except Exception as e:
-                print(f"页面出现异常，元素不可点击：{e}")
-                return False
+                raise Exception(f"页面出现异常，元素不可点击：{e}") from e
 
         # 点击后的元素出现/消失校验（仅当参数提供时执行）
         try:
@@ -342,8 +341,7 @@ class ObjectMap:
                     timeout=timeout
                 )
         except Exception as e:
-            print(f"等待元素消失或出现失败：{e}")
-            return False
+            raise Exception(f"等待元素消失或出现失败：{e}") from e
 
         return True
 
@@ -387,16 +385,26 @@ class ObjectMap:
         window_handles = driver.window_handles
         driver.switch_to.window(window_handles[-1])
 
-    def find_img_in_screenshot(self, driver, screenshot_name, target_img_name):
+    def find_img_in_screenshot(self, driver, screenshot_name_or_target_img_name, target_img_name=None):
         """
         截图并在截图中查找图片
         :param driver:
-        :param screenshot_name:
+        :param screenshot_name_or_target_img_name: 兼容两种调用方式：
+            1) 只传目标图名：find_img_in_screenshot(driver, target_img_name)
+            2) 传截图名+目标图名：find_img_in_screenshot(driver, screenshot_name, target_img_name)
         :param target_img_name:
         :return:
         """
-        # 20260515 screenshot_path和target_img_path传同一个参数很奇怪，
-        # 20260515 最后出来的截图的名字和周杰伦头像截图.png，所以改成传2个参了
+        if target_img_name is None:
+            screenshot_name = None
+            target_img_name = screenshot_name_or_target_img_name
+        else:
+            screenshot_name = screenshot_name_or_target_img_name
+
+        if not screenshot_name or screenshot_name == target_img_name:
+            target_stem = Path(target_img_name).stem
+            screenshot_name = f"ScreenShot_{get_now_date_time_str()}_{target_stem}.png"
+
         # 截图后图片保存的路径（大图）
         screenshot_path = get_screenshot_path(screenshot_name)
         # 需要查找的图片的路径
@@ -425,3 +433,15 @@ class ObjectMap:
         # screenshot() 方法的作用
         # element.screenshot(ele_screenshot_path) 是 Selenium WebDriver 中
         # WebElement 对象的一个方法，用于截取特定网页元素的截图并保存到本地文件。
+
+    def scroll_to_element(self, driver, locate_type, locator_expression):
+        """
+        滚到到目标元素
+        :param driver:
+        :param locate_type:
+        :param locator_expression:
+        :return:
+        """
+        ele = self.element_get(driver, locate_type, locator_expression)
+        driver.execute_script("arguments[0].scrollIntoView()", ele)
+        return True
