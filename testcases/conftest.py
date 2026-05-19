@@ -3,13 +3,72 @@
 # @Time: 2026/5/6 18:44
 # @Author: Rena
 
+from functools import cached_property
+
 import pytest
 
+from common.mysql_operate import MysqlOperate
 from config.driver_config import DriverConfig
 from common.report_add_img import add_img_to_report
 from common.process_redis import ProcessRedis
+from page.AccountPage import AccountPage
+from page.ExternalLinkPage import ExternalLinkPage
+from page.GoodsPage import GoodsPage
+from page.HomePage import HomePage
+from page.IframeBaiduMapPage import IframeBaiduMapPage
+from page.LeftMenuPage import LeftMenuPage
+from page.LoginPage import LoginPage
+from page.OrderPage import OrderPage
+from page.TradingMarketPage import TradingMarketPage
 
 process_redis = ProcessRedis()
+
+
+class ObjectPool:
+    @cached_property
+    def account_page(self):
+        return AccountPage()
+
+    @cached_property
+    def external_link_page(self):
+        return ExternalLinkPage()
+
+    @cached_property
+    def goods_page(self):
+        return GoodsPage()
+
+    @cached_property
+    def home_page(self):
+        return HomePage()
+
+    @cached_property
+    def iframe_baidu_map_page(self):
+        return IframeBaiduMapPage()
+
+    @cached_property
+    def left_menu_page(self):
+        return LeftMenuPage()
+
+    @cached_property
+    def login_page(self):
+        return LoginPage()
+
+    @cached_property
+    def mysql_operate(self):
+        return MysqlOperate()
+
+    @cached_property
+    def order_page(self):
+        return OrderPage()
+
+    @cached_property
+    def trading_market_page(self):
+        return TradingMarketPage()
+
+
+@pytest.fixture(scope='session')
+def test_objects():
+    return ObjectPool()
 
 
 def pytest_collection_finish(session):

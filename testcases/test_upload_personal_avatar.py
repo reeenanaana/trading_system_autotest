@@ -5,22 +5,15 @@
 
 from time import sleep
 
-from config.driver_config import DriverConfig
-from page.LeftMenuPage import LeftMenuPage
-from page.LoginPage import LoginPage
-from page.AccountPage import AccountPage
-
 
 class TestPersonalInfo:
-    def test_upload_personal_avatar(self, driver):
-        # driver = DriverConfig().driver_config()
-        LoginPage().login(driver, 'jay')
-        LeftMenuPage().click_level_one_menu(driver, '账户设置')
+    def test_upload_personal_avatar(self, driver, test_objects):
+        test_objects.login_page.login(driver, 'jay')
+        test_objects.left_menu_page.click_level_one_menu(driver, '账户设置')
         sleep(1)
-        LeftMenuPage().click_level_two_menu(driver, '个人资料')
+        test_objects.left_menu_page.click_level_two_menu(driver, '个人资料')
         sleep(3)
-        AccountPage().upload_avatar(driver, '个人头像二.jpg')
+        test_objects.account_page.upload_avatar(driver, '个人头像二.jpg')
         sleep(3)
-        AccountPage().click_save(driver)
+        test_objects.account_page.click_save(driver)
         sleep(3)
-        # driver.quit()

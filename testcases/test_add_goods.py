@@ -7,10 +7,6 @@ import pytest
 
 from time import sleep
 
-from page.LoginPage import LoginPage
-from page.LeftMenuPage import LeftMenuPage
-from page.GoodsPage import GoodsPage
-
 goods_info_list = [
     {"goods_title": "新增批量商品测试1",
      "goods_details": "新增批量商品测试详情1",
@@ -33,24 +29,13 @@ goods_info_list = [
 
 class TestAddGoods:
     @pytest.mark.parametrize("goods_info", goods_info_list)
-    def test_add_goods_1(self, driver, goods_info):
-        # driver = DriverConfig().driver_config()
-        LoginPage().login(driver, 'jay')
-        LeftMenuPage().click_level_one_menu(driver, '产品')
+    def test_add_goods_1(self, driver, goods_info, test_objects):
+        test_objects.login_page.login(driver, 'jay')
+        test_objects.left_menu_page.click_level_one_menu(driver, '产品')
         sleep(1)
-        LeftMenuPage().click_level_two_menu(driver, "新增二手商品")
+        test_objects.left_menu_page.click_level_two_menu(driver, "新增二手商品")
         sleep(1)
-        # GoodsPage().add_new_goods(
-        #     driver,
-        #     goods_title='新增商品测试-Rena',
-        #     goods_details='新增商品测试详情-Rena',
-        #     goods_quantity=1,
-        #     goods_pic_list=['商品图片一.jpg'],
-        #     goods_price=999,
-        #     goods_status='上架',
-        #     bottom_button_name='提交'
-        # )
-        GoodsPage().add_new_goods(
+        test_objects.goods_page.add_new_goods(
             driver,
             goods_title=goods_info['goods_title'],
             goods_details=goods_info['goods_details'],
@@ -61,4 +46,3 @@ class TestAddGoods:
             bottom_button_name=goods_info['bottom_button_name']
         )
         sleep(5)
-        # driver.quit()
