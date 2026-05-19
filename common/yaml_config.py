@@ -36,10 +36,12 @@ class GetConf:
     def get_mysql_config(self):
         return self.env['mysql']
 
+    def get_redis(self):
+        return self.env["redis"]
 
 if __name__ == '__main__':
     # print(GetConf().get_username_password("william"))
-    print(GetConf().get_mysql_config())
+    print(GetConf().get_redis())
 # 你的代码思路正确，主要需要改进：
 # 用 Path 替代硬编码路径
 # 用 safe_load/full_load() 替代 load

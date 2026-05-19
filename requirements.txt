@@ -2,6 +2,7 @@
 pytest==8.4.2
 pytest-xdist==3.8.0
 allure-pytest==2.16.0
+redis
 
 # Web 自动化
 selenium==4.15.0

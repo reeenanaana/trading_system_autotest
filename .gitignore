@@ -5,13 +5,12 @@ __pycache__
 labs
 UIreport
 test.log
+*.log
 # 虚拟环境
 .venv/
 venv/
 env/
 ENV/
 report.html
-UIreport
-test.log
-logs/all_logs/*.log
-logs/all_logs/
+/logs/all_logs/*.log
+*.png
