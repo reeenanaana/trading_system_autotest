@@ -30,12 +30,18 @@ process_redis = ProcessRedis()
 # pytest 运行期间保存在内存里的用例结果列表。
 # 业务场景：Redis 负责进度和失败名称持久化，这个列表负责给通知链路补充每条 case 的 outcome、耗时等明细。
 testcase_results = []
+CURRENT_PROCESS_IS_XDIST_WORKER = False
 
 
 def is_xdist_worker(config):
     # pytest-xdist 并行运行时，每个 worker 都会有 workerinput 属性。
     # 业务场景：worker 只负责执行用例和更新 Redis，最终钉钉通知必须只由主进程发送一次。
     return hasattr(config, "workerinput")
+
+
+def pytest_configure(config):
+    global CURRENT_PROCESS_IS_XDIST_WORKER
+    CURRENT_PROCESS_IS_XDIST_WORKER = is_xdist_worker(config)
 
 
 class ObjectPool:
@@ -115,6 +121,14 @@ def get_testcase_description(item):
     return doc.strip().splitlines()[0].strip()
 
 
+def get_report_description(report):
+    # xdist 会把 report.user_properties 从 worker 传回主进程，用它保留业务用例名称。
+    for name, value in getattr(report, "user_properties", []):
+        if name == "description" and value:
+            return value
+    return getattr(report, "description", report.nodeid)
+
+
 # 作用：整个 pytest 会话结束后触发一次。
 # pytest_sessionfinish 是 pytest 约定好的 Hook 函数名。
 # pytest 在运行过程中会在固定生命周期节点主动查找并调用这些 Hook。只要你在 conftest.py 里定义了：pytest 就会自动注册它，并在 整个测试 session 即将结束时 调用它。
@@ -155,6 +169,7 @@ def pytest_runtest_makereport(item, call):
     # result.get_result() 取出 pytest 为当前阶段生成的测试报告对象。
     report = result.get_result()
     report.description = get_testcase_description(item)
+    report.user_properties.append(("description", report.description))
 
     if report.when == 'call' and report.failed:
         # report.when 有 setup/call/teardown 三种阶段。
@@ -169,24 +184,34 @@ def pytest_runtest_makereport(item, call):
                 "失败截图",
                 need_sleep=False
             )
+    else:
+        pass
+
+
+def pytest_runtest_logreport(report):
+    if CURRENT_PROCESS_IS_XDIST_WORKER or report.when != 'call':
+        return
+
+    description = get_report_description(report)
+    if report.failed:
         # 更新失败用例个数
         process_redis.update_failed()
         # 增加失败用例的名称到报告用例中的description
-        process_redis.insert_into_failed_testcases_name(report.description)
+        process_redis.insert_into_failed_testcases_name(description)
         # 把当前失败用例转换成统一数据模型，交给后续通知摘要使用。
         testcase_results.append(TestCaseResult(
-            name=report.description,
+            name=description,
             outcome=report.outcome,
             # getattr(obj, "attr", default) 表示安全读取属性；没有 duration 时返回 0.0。
             duration=getattr(report, "duration", 0.0),
             error=str(report.longrepr),
         ))
-    elif report.when == 'call' and report.passed:
+    elif report.passed:
         # 更新用例成功的个数
         process_redis.update_success()
         # 成功用例也记录下来，后续如果通知需要展示用例明细或耗时，可以直接复用。
         testcase_results.append(TestCaseResult(
-            name=report.description,
+            name=description,
             outcome=report.outcome,
             duration=getattr(report, "duration", 0.0),
         ))
