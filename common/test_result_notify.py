@@ -1,0 +1,176 @@
+#! /usr/bin/python3
+# coding = utf-8
+"""
+测试结果通知编排模块。
+
+业务场景：
+pytest 执行结束后，conftest.py 会把 Redis 中的统计数据和本轮收集到的用例结果交给本模块。
+本模块负责把这些分散的数据整理成统一的 TestResultSummary，再交给具体通知渠道发送。
+
+这样做的好处：
+1. pytest hook 只关心“什么时候收集结果”，不关心“通知内容怎么拼”。
+2. 钉钉、企业微信、飞书等渠道以后可以复用同一份 TestResultSummary。
+3. Jenkins/Allure 报告链接、失败用例列表等业务字段集中维护。
+"""
+
+import logging
+from dataclasses import dataclass, field
+from typing import Iterable, List, Optional
+
+from common.ding_talk import send_dingtalk_msg_markdown
+from common.yaml_config import GetConf
+
+logger = logging.getLogger(__name__)
+
+# 当配置文件没有填写项目名或报告标题时，用下面的默认值兜底。
+# 业务场景：本地调试时可能还没配置 Jenkins/报告信息，不能因此中断测试结束流程。
+DEFAULT_PROJECT_NAME = "trading_system_autotest"
+DEFAULT_REPORT_TITLE = "UI自动化测试-测试报告"
+
+
+@dataclass
+class TestCaseResult:
+    """
+    单条测试用例的执行结果。
+
+    语法说明：
+    @dataclass 是 Python 标准库提供的装饰器，会自动生成 __init__、__repr__ 等方法。
+    业务场景：
+    pytest_runtest_makereport 每跑完一条用例，就生成一个 TestCaseResult 放进列表，
+    最终用于通知中展示失败用例、耗时、错误信息等。
+    """
+
+    # 类型注解 name: str 表示 name 期望是字符串，便于 IDE 提示和后续维护。
+    name: str
+    # pytest report.outcome 的常见值是 passed、failed、skipped。
+    outcome: str
+    # 默认值 0.0 表示即使 pytest 没给 duration，也不会影响通知构建。
+    duration: float = 0.0
+    # 失败原因可选，当前通知先不展示，后续可用于扩展详细失败摘要。
+    error: str = ""
+
+
+@dataclass
+class TestResultSummary:
+    """
+    本轮测试结果汇总，用于不同通知渠道复用同一份数据。
+
+    业务场景：
+    这是通知链路中的“统一数据模型”。不管最终发钉钉还是企业微信，都先把数据整理成它，
+    避免每个渠道各自去读 Redis、拼 Jenkins 地址、处理失败用例。
+    """
+
+    project_name: str
+    report_title: str
+    allure_url: str
+    total_count: int
+    success_count: int
+    failure_count: int
+    progress: str
+    failed_testcases_name: str = ""
+    start_time: str = "-"
+    # field(default_factory=list) 的作用是给每个实例创建自己的新列表。
+    # 业务场景：避免多个 TestResultSummary 共用同一个列表，导致不同批次测试结果互相污染。
+    testcases: List[TestCaseResult] = field(default_factory=list)
+
+    @property
+    def passed(self):
+        # @property 让调用方可以用 summary.passed 访问结果，而不是 summary.passed()。
+        # 业务场景：判断本轮测试是否全通过，后续可用于控制通知标题颜色或是否 @所有人。
+        return self.failure_count == 0
+
+
+def _to_int(value, default=0):
+    # Redis 取出的值通常是字符串；这里统一转成 int，便于后面做统计和展示。
+    # value or default 可以把 None、空字符串等无效值替换成默认值。
+    try:
+        return int(value or default)
+    except (TypeError, ValueError):
+        # 如果配置或 Redis 数据异常，不让通知链路影响测试主流程。
+        return default
+
+
+def _format_failed_names(failed_names: Iterable[str]) -> str:
+    # Iterable[str] 表示参数可以是 list、tuple 等可迭代对象，不限定必须是 list。
+    # 业务场景：Redis 返回列表，本地兜底也会生成列表，统一在这里格式化成通知文案。
+    names = [name for name in failed_names if name]
+    if not names:
+        return ""
+    return "，失败的用例为：" + "，".join(names)
+
+
+def _build_allure_url(jenkins_url: str, project_name: str) -> str:
+    # rstrip("/") 去掉 Jenkins 地址末尾的斜杠，避免拼出 http://jenkins//job/xxx。
+    # 业务场景：Jenkins Allure 插件的报告地址通常是 /job/{项目名}/allure/。
+    if not jenkins_url:
+        return ""
+    return jenkins_url.rstrip("/") + "/job/" + project_name + "/allure/"
+
+
+def build_test_result_summary(process_redis, testcases: Iterable[TestCaseResult], conf: Optional[GetConf] = None):
+    """
+    从 Redis 进度和 pytest 收集结果中生成统一测试报告摘要。
+    :param process_redis: ProcessRedis 实例
+    :param testcases: pytest hook 收集到的用例结果
+    :param conf: 配置读取对象，默认读取 environment.yaml
+    :return: TestResultSummary
+    """
+    # conf or GetConf() 是常见兜底写法：
+    # 调用方没传配置对象时，默认读取 environment.yaml；单元测试时也可以传假的 conf。
+    conf = conf or GetConf()
+    # list(testcases) 把可迭代对象固定成列表，后续可多次遍历，不怕生成器被消费掉。
+    testcase_list = list(testcases)
+    # 从 Redis 读取本轮统计数据，这是通知中的总数、成功数、失败数来源。
+    total, success, failed, start_time = process_redis.get_result()
+    # 优先使用 Redis 中记录的失败用例名称，便于外部脚本和 pytest 内部逻辑保持一致。
+    failed_names = process_redis.get_failed_testcases_name()
+    if not failed_names:
+        # 如果 Redis 不可用或没有失败列表，就用 pytest hook 收集到的本地结果兜底。
+        failed_names = [testcase.name for testcase in testcase_list if testcase.outcome == "failed"]
+
+    project_name = conf.get_project_name() or DEFAULT_PROJECT_NAME
+    report_title = conf.get_report_title() or DEFAULT_REPORT_TITLE
+    allure_url = _build_allure_url(conf.get_jenkins_url(), project_name)
+
+    # 返回统一摘要对象，后续通知渠道只依赖这个对象，不直接依赖 Redis 或 pytest。
+    return TestResultSummary(
+        project_name=project_name,
+        report_title=report_title,
+        allure_url=allure_url,
+        total_count=_to_int(total),
+        success_count=_to_int(success),
+        failure_count=_to_int(failed),
+        progress=process_redis.get_process(),
+        failed_testcases_name=_format_failed_names(failed_names),
+        start_time=start_time or "-",
+        testcases=testcase_list,
+    )
+
+
+def notify_test_result(summary: TestResultSummary, conf: Optional[GetConf] = None):
+    """
+    统一发送测试结果通知。当前项目先接入钉钉，后续可在这里扩展企业微信/飞书。
+    :param summary: 测试结果汇总
+    :param conf: 配置读取对象，默认读取 environment.yaml
+    :return: True 表示已触发发送，False 表示未配置 webhook
+    """
+    conf = conf or GetConf()
+    # webhook 是钉钉机器人地址，放在配置文件中，避免写死在通知逻辑里。
+    webhook = conf.get_dingding_webhook()
+    if not webhook:
+        logger.warning("未配置钉钉 webhook，跳过测试结果通知")
+        return False
+
+    # 当前只接入钉钉；以后新增企业微信/飞书时，可以继续在这里分发，不改 conftest.py。
+    send_dingtalk_msg_markdown(
+        webhook,
+        summary.allure_url,
+        summary.total_count,
+        summary.success_count,
+        summary.failure_count,
+        summary.failed_testcases_name,
+        summary.report_title,
+        progress=summary.progress,
+        start_time=summary.start_time,
+    )
+    return True

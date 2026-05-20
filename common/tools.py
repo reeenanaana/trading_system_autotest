@@ -105,6 +105,26 @@ def get_diff_img_path(diff_img_name):
     # 返回完整文件路径
     return str(diff_img_dir / diff_img_name)
 
+
+def get_everyday_wallpaper():
+    """
+    从 Bing 获取每日壁纸
+    :return: 壁纸图片完整 URL
+    """
+    url = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1"
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    try:
+        res = requests.get(url, headers=headers, timeout=10).json()
+        wallpaper_url = "https://cn.bing.com" + res["images"][0]["url"]
+        return wallpaper_url
+    except Exception as e:
+        print("获取 Bing 壁纸失败:", e)
+        return None
+
+
 # ele_screenshot_path = get_project_path('trading_system_autotest') / 'img' / 'ele_screenshots' / ele_screenshot_name
 # ele_screenshot_path.mkdir(parents=True, exist_ok=True)
 # return str(ele_screenshot_path)
@@ -113,13 +133,5 @@ def get_diff_img_path(diff_img_name):
 # 当文件名没有扩展名或格式特殊时，可能创建了一个同名目录
 # 后续 screenshot() 试图把文件写入一个已存在的目录时，就会报 IsADirectoryError
 
-# if __name__ == '__main__':
-# # print(get_now_time())
-#     # print(get_project_path())
-#     # "/Users/fengzhaoxi/imooc/code/trading_system_autotest/common"
-#     # sep(["config", "environment.yaml"], add_sep_before=True)
-#     print(get_every_wallpaper())
-#     print(get_img_path('商品图片1一'))
-#     print(get_target_img_path('周杰伦头像截图.png'))
-#     print(type(get_now_date_time_str()))
-#     print(get_diff_img_path('对比的图.png'))
+if __name__ == '__main__':
+    print(get_everyday_wallpaper())

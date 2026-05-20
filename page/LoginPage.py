@@ -42,12 +42,31 @@ class LoginPage(LoginBase, ObjectMap):
         # driver.find_element(By.XPATH, button_xpath).click()
         return self.element_click(driver, By.XPATH, button_xpath)
 
-    def login(self, driver, user, need_captcha=False):
+    def is_login_success_displayed(self, driver):
+        """
+        判断登录成功提示是否展示
+        :param driver:
+        :return:
+        """
+        success_xpath = self.login_success()
+        return self.element_is_display(driver, By.XPATH, success_xpath)
+
+    def assert_login_success(self, driver):
+        """
+        验证是否登录成功（是否有登录成功的标签）
+        :param driver:
+        :return:
+        """
+        success_xpath = self.login_success()
+        self.element_appear(driver, By.XPATH, success_xpath, timeout=2)
+
+    def login(self, driver, user, need_captcha=False, assert_success=True):
         """
         登录
         :param driver:
         :param user:
         :param need_captcha: 是否需要验证码
+        :param assert_success: 是否校验登录成功
         :return:
         """
         log.info("跳转登录页")
@@ -75,7 +94,8 @@ class LoginPage(LoginBase, ObjectMap):
         self.login_input_value(driver, "用户名", username)
         self.login_input_value(driver, "密码", password)
         self.click_login(driver, "登录")
-        self.assert_login_success(driver)
+        if assert_success:
+            self.assert_login_success(driver)
 
     def login_avatar_assert(self, driver, screenshot_name, target_img_name):
         """
@@ -87,15 +107,6 @@ class LoginPage(LoginBase, ObjectMap):
         """
         log.info("登录后判断头像")
         return self.find_img_in_screenshot(driver, screenshot_name, target_img_name)
-
-    def assert_login_success(self, driver):
-        """
-        验证是否登录成功（是否有登录成功的标签）
-        :param driver:
-        :return:
-        """
-        success_xpath = self.login_success()
-        self.element_appear(driver, By.XPATH, success_xpath, timeout=2)
 
     def select_need_captcha(self, driver):
         """
