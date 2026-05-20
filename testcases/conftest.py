@@ -32,6 +32,12 @@ process_redis = ProcessRedis()
 testcase_results = []
 
 
+def is_xdist_worker(config):
+    # pytest-xdist 并行运行时，每个 worker 都会有 workerinput 属性。
+    # 业务场景：worker 只负责执行用例和更新 Redis，最终钉钉通知必须只由主进程发送一次。
+    return hasattr(config, "workerinput")
+
+
 class ObjectPool:
     @cached_property
     def account_page(self):
@@ -84,6 +90,9 @@ def test_objects():
 # 作用：pytest 收集完本次要执行的所有用例后触发一次。
 # 用法：这里用 session.items 拿到本轮用例总数，并初始化 Redis 中的自动化测试进度。
 def pytest_collection_finish(session):
+    if is_xdist_worker(session.config):
+        return
+
     # pytest_collection_finish 是 pytest 的生命周期 hook：
     # 所有测试用例收集完成后自动调用，适合初始化“本轮测试总数”。
     # 获取所有用例的个数
@@ -111,6 +120,9 @@ def get_testcase_description(item):
 # pytest 在运行过程中会在固定生命周期节点主动查找并调用这些 Hook。只要你在 conftest.py 里定义了：pytest 就会自动注册它，并在 整个测试 session 即将结束时 调用它。
 # 用法：这里统一写入结束状态，并把本轮收集到的所有 case 结果汇总成一条钉钉消息发送。
 def pytest_sessionfinish(session, exitstatus):
+    if is_xdist_worker(session.config):
+        return
+
     # pytest_sessionfinish 是 pytest 的生命周期 hook：
     # 整个测试会话结束时自动调用，适合做收尾动作，例如写结束时间、发送通知。
     # 测试会话结束后写入结束时间和运行状态，便于外部看板判断本轮执行已完成。
