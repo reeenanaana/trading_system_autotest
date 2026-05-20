@@ -14,6 +14,7 @@ pytest 执行结束后，conftest.py 会把 Redis 中的统计数据和本轮收
 """
 
 import logging
+import os
 from dataclasses import dataclass, field
 from typing import Iterable, List, Optional
 
@@ -100,11 +101,20 @@ def _format_failed_names(failed_names: Iterable[str]) -> str:
 
 
 def _build_allure_url(jenkins_url: str, project_name: str) -> str:
-    # rstrip("/") 去掉 Jenkins 地址末尾的斜杠，避免拼出 http://jenkins//job/xxx。
-    # 业务场景：Jenkins Allure 插件的报告地址通常是 /job/{项目名}/allure/。
-    if not jenkins_url:
-        return ""
-    return jenkins_url.rstrip("/") + "/job/" + project_name + "/allure/"
+    # 本地手动运行时，如果需要钉钉跳转到本次生成的本地报告，可以显式传入最终报告地址。
+    # 业务场景：只跑单个 case 时，避免误跳到 Jenkins 上一次全量构建报告。
+    explicit_allure_url = os.getenv("ALLURE_REPORT_URL")
+    if explicit_allure_url:
+        return explicit_allure_url
+
+    # Jenkins 构建时会自动注入 BUILD_URL，例如 http://jenkins/job/demo/12/。
+    # 业务场景：钉钉通知必须指向“本次构建”的 Allure 报告，而不是 Job 维度的最新报告。
+    build_url = os.getenv("BUILD_URL")
+    if build_url:
+        return build_url.rstrip("/") + "/allure/"
+
+    # 非 Jenkins 环境下不使用 jenkins.url 兜底，避免本地手动运行单 case 时跳到 Jenkins 全量报告。
+    return ""
 
 
 def build_test_result_summary(process_redis, testcases: Iterable[TestCaseResult], conf: Optional[GetConf] = None):
