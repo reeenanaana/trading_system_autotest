@@ -5,9 +5,13 @@ allure-pytest==2.16.0
 redis
 PyYAML
 PyMySQL
+requests
 
 # Web 自动化
 selenium==4.15.0
+aircv
+opencv-python
+ddddocr
 
 # 可选：如果需要 WebDriver 自动管理（推荐）
 webdriver-manager==4.0.1
