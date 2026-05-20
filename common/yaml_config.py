@@ -3,6 +3,8 @@
 # @Time: 2026/4/27 15:36
 # @Author: Rena
 
+import os
+
 import yaml
 from pathlib import Path
 from common.tools import get_project_path
@@ -43,6 +45,11 @@ class GetConf:
         return self.env["redis"]
 
     def get_dingding_webhook(self):
+        # Jenkins 中优先从环境变量读取 webhook，避免把钉钉机器人 token 提交到 Git 仓库。
+        # 本地调试时仍兼容 environment.yaml 里的 dingding_group.webhook。
+        webhook = os.getenv("DINGDING_WEBHOOK") or os.getenv("DINGTALK_WEBHOOK")
+        if webhook:
+            return webhook
         # get(..., {}) 是安全读取写法：配置缺失时返回空字符串，让通知链路跳过发送而不是报 KeyError。
         return self.env.get("dingding_group", {}).get("webhook", "")
 
