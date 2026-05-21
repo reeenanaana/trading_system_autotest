@@ -16,6 +16,7 @@ from common.test_result_notify import (
     build_test_result_summary,
     notify_test_result,
 )
+from common.tools import get_now_date_time_str
 from page.AccountPage import AccountPage
 from page.ExternalLinkPage import ExternalLinkPage
 from page.GoodsPage import GoodsPage
@@ -31,6 +32,7 @@ process_redis = ProcessRedis()
 # 业务场景：Redis 负责进度和失败名称持久化，这个列表负责给通知链路补充每条 case 的 outcome、耗时等明细。
 testcase_results = []
 CURRENT_PROCESS_IS_XDIST_WORKER = False
+test_start_time = "-"
 
 
 def is_xdist_worker(config):
@@ -42,16 +44,6 @@ def is_xdist_worker(config):
 def pytest_configure(config):
     global CURRENT_PROCESS_IS_XDIST_WORKER
     CURRENT_PROCESS_IS_XDIST_WORKER = is_xdist_worker(config)
-
-
-def pytest_sessionstart(session):
-    if is_xdist_worker(session.config):
-        return
-
-    # 并行模式下 collection_finish 可能不在主进程按预期执行，所以会话开始先清掉历史 Redis 数据。
-    # total 先写 0，最终钉钉统计以本次 pytest 收到的 testcase_results 为准。
-    process_redis.reset_all()
-    process_redis.init_process(0)
 
 
 class ObjectPool:
@@ -106,6 +98,7 @@ def test_objects():
 # 作用：pytest 收集完本次要执行的所有用例后触发一次。
 # 用法：这里用 session.items 拿到本轮用例总数，并初始化 Redis 中的自动化测试进度。
 def pytest_collection_finish(session):
+    global test_start_time
     if is_xdist_worker(session.config):
         return
 
@@ -117,6 +110,7 @@ def pytest_collection_finish(session):
     process_redis.reset_all()
     # 初始化进度
     process_redis.init_process(total)
+    test_start_time = get_now_date_time_str()
 
 
 # 作用：从测试函数的 docstring 中提取用例名称。
@@ -153,8 +147,8 @@ def pytest_sessionfinish(session, exitstatus):
     process_redis.write_end_time()
     process_redis.modify_running_status(process_redis.FINISHED)
 
-    # build_test_result_summary 把 Redis 统计和本地 testcase_results 合并成统一摘要对象。
-    summary = build_test_result_summary(process_redis, testcase_results)
+    # build_test_result_summary 只使用本次 pytest 收集到的 testcase_results 生成通知摘要。
+    summary = build_test_result_summary(testcase_results, start_time=test_start_time)
     # notify_test_result 是统一通知入口；conftest.py 不直接关心钉钉 Markdown 怎么拼。
     notify_test_result(summary)
 

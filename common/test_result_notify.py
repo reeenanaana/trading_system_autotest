@@ -4,8 +4,8 @@
 测试结果通知编排模块。
 
 业务场景：
-pytest 执行结束后，conftest.py 会把 Redis 中的统计数据和本轮收集到的用例结果交给本模块。
-本模块负责把这些分散的数据整理成统一的 TestResultSummary，再交给具体通知渠道发送。
+pytest 执行结束后，conftest.py 会把本轮收集到的用例结果交给本模块。
+本模块负责把本次 pytest 结果整理成统一的 TestResultSummary，再交给具体通知渠道发送。
 
 这样做的好处：
 1. pytest hook 只关心“什么时候收集结果”，不关心“通知内容怎么拼”。
@@ -58,7 +58,7 @@ class TestResultSummary:
 
     业务场景：
     这是通知链路中的“统一数据模型”。不管最终发钉钉还是企业微信，都先把数据整理成它，
-    避免每个渠道各自去读 Redis、拼 Jenkins 地址、处理失败用例。
+    避免每个渠道各自拼 Jenkins 地址、处理失败用例。
     """
 
     project_name: str
@@ -79,16 +79,6 @@ class TestResultSummary:
         # @property 让调用方可以用 summary.passed 访问结果，而不是 summary.passed()。
         # 业务场景：判断本轮测试是否全通过，后续可用于控制通知标题颜色或是否 @所有人。
         return self.failure_count == 0
-
-
-def _to_int(value, default=0):
-    # Redis 取出的值通常是字符串；这里统一转成 int，便于后面做统计和展示。
-    # value or default 可以把 None、空字符串等无效值替换成默认值。
-    try:
-        return int(value or default)
-    except (TypeError, ValueError):
-        # 如果配置或 Redis 数据异常，不让通知链路影响测试主流程。
-        return default
 
 
 def _format_failed_names(failed_names: Iterable[str]) -> str:
@@ -123,12 +113,12 @@ def _build_allure_url(jenkins_url: str, project_name: str) -> str:
     return ""
 
 
-def build_test_result_summary(process_redis, testcases: Iterable[TestCaseResult], conf: Optional[GetConf] = None):
+def build_test_result_summary(testcases: Iterable[TestCaseResult], conf: Optional[GetConf] = None, start_time: str = "-"):
     """
-    从 Redis 进度和 pytest 收集结果中生成统一测试报告摘要。
-    :param process_redis: ProcessRedis 实例
+    从本次 pytest 收集结果中生成统一测试报告摘要。
     :param testcases: pytest hook 收集到的用例结果
     :param conf: 配置读取对象，默认读取 environment.yaml
+    :param start_time: 本次测试开始时间
     :return: TestResultSummary
     """
     # conf or GetConf() 是常见兜底写法：
@@ -136,21 +126,12 @@ def build_test_result_summary(process_redis, testcases: Iterable[TestCaseResult]
     conf = conf or GetConf()
     # list(testcases) 把可迭代对象固定成列表，后续可多次遍历，不怕生成器被消费掉。
     testcase_list = list(testcases)
-    # 从 Redis 读取时间等运行信息；计数优先使用本次 pytest 主进程收集到的 testcase_list。
-    total, success, failed, start_time = process_redis.get_result()
-    if testcase_list:
-        # 并行执行时 Redis 可能受历史残留或 worker 写入影响，通知必须以本次 pytest report 为准。
-        total_count = len(testcase_list)
-        success_count = len([testcase for testcase in testcase_list if testcase.outcome == "passed"])
-        failure_count = len([testcase for testcase in testcase_list if testcase.outcome == "failed"])
-        failed_names = [testcase.name for testcase in testcase_list if testcase.outcome == "failed"]
-        progress = _build_progress(total_count, success_count + failure_count)
-    else:
-        total_count = _to_int(total)
-        success_count = _to_int(success)
-        failure_count = _to_int(failed)
-        failed_names = process_redis.get_failed_testcases_name()
-        progress = process_redis.get_process()
+    # 通知统计只使用本次 pytest report，避免 Redis 历史数据或并行写入污染最终报告。
+    total_count = len(testcase_list)
+    success_count = len([testcase for testcase in testcase_list if testcase.outcome == "passed"])
+    failure_count = len([testcase for testcase in testcase_list if testcase.outcome == "failed"])
+    failed_names = [testcase.name for testcase in testcase_list if testcase.outcome == "failed"]
+    progress = _build_progress(total_count, success_count + failure_count)
 
     project_name = conf.get_project_name() or DEFAULT_PROJECT_NAME
     report_title = conf.get_report_title() or DEFAULT_REPORT_TITLE
