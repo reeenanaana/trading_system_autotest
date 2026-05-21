@@ -46,6 +46,15 @@ def pytest_configure(config):
     CURRENT_PROCESS_IS_XDIST_WORKER = is_xdist_worker(config)
 
 
+def pytest_sessionstart(session):
+    global test_start_time
+    if is_xdist_worker(session.config):
+        return
+
+    # sessionstart 在本次 pytest 会话开始时触发，比 collection_finish 更适合记录通知里的开始时间。
+    test_start_time = get_now_date_time_str()
+
+
 class ObjectPool:
     @cached_property
     def account_page(self):
@@ -98,7 +107,6 @@ def test_objects():
 # 作用：pytest 收集完本次要执行的所有用例后触发一次。
 # 用法：这里用 session.items 拿到本轮用例总数，并初始化 Redis 中的自动化测试进度。
 def pytest_collection_finish(session):
-    global test_start_time
     if is_xdist_worker(session.config):
         return
 
@@ -110,7 +118,6 @@ def pytest_collection_finish(session):
     process_redis.reset_all()
     # 初始化进度
     process_redis.init_process(total)
-    test_start_time = get_now_date_time_str()
 
 
 # 作用：整个 pytest 会话结束后触发一次。
