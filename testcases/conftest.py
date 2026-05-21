@@ -44,6 +44,16 @@ def pytest_configure(config):
     CURRENT_PROCESS_IS_XDIST_WORKER = is_xdist_worker(config)
 
 
+def pytest_sessionstart(session):
+    if is_xdist_worker(session.config):
+        return
+
+    # 并行模式下 collection_finish 可能不在主进程按预期执行，所以会话开始先清掉历史 Redis 数据。
+    # total 先写 0，最终钉钉统计以本次 pytest 收到的 testcase_results 为准。
+    process_redis.reset_all()
+    process_redis.init_process(0)
+
+
 class ObjectPool:
     @cached_property
     def account_page(self):

@@ -100,6 +100,12 @@ def _format_failed_names(failed_names: Iterable[str]) -> str:
     return "，失败的用例为：" + "，".join(names)
 
 
+def _build_progress(total_count: int, finished_count: int) -> str:
+    if total_count <= 0:
+        return "0.0%"
+    return "{:.1f}%".format(finished_count / total_count * 100)
+
+
 def _build_allure_url(jenkins_url: str, project_name: str) -> str:
     # 本地手动运行时，如果需要钉钉跳转到本次生成的本地报告，可以显式传入最终报告地址。
     # 业务场景：只跑单个 case 时，避免误跳到 Jenkins 上一次全量构建报告。
@@ -130,13 +136,21 @@ def build_test_result_summary(process_redis, testcases: Iterable[TestCaseResult]
     conf = conf or GetConf()
     # list(testcases) 把可迭代对象固定成列表，后续可多次遍历，不怕生成器被消费掉。
     testcase_list = list(testcases)
-    # 从 Redis 读取本轮统计数据，这是通知中的总数、成功数、失败数来源。
+    # 从 Redis 读取时间等运行信息；计数优先使用本次 pytest 主进程收集到的 testcase_list。
     total, success, failed, start_time = process_redis.get_result()
-    # 优先使用 Redis 中记录的失败用例名称，便于外部脚本和 pytest 内部逻辑保持一致。
-    failed_names = process_redis.get_failed_testcases_name()
-    if not failed_names:
-        # 如果 Redis 不可用或没有失败列表，就用 pytest hook 收集到的本地结果兜底。
+    if testcase_list:
+        # 并行执行时 Redis 可能受历史残留或 worker 写入影响，通知必须以本次 pytest report 为准。
+        total_count = len(testcase_list)
+        success_count = len([testcase for testcase in testcase_list if testcase.outcome == "passed"])
+        failure_count = len([testcase for testcase in testcase_list if testcase.outcome == "failed"])
         failed_names = [testcase.name for testcase in testcase_list if testcase.outcome == "failed"]
+        progress = _build_progress(total_count, success_count + failure_count)
+    else:
+        total_count = _to_int(total)
+        success_count = _to_int(success)
+        failure_count = _to_int(failed)
+        failed_names = process_redis.get_failed_testcases_name()
+        progress = process_redis.get_process()
 
     project_name = conf.get_project_name() or DEFAULT_PROJECT_NAME
     report_title = conf.get_report_title() or DEFAULT_REPORT_TITLE
@@ -147,10 +161,10 @@ def build_test_result_summary(process_redis, testcases: Iterable[TestCaseResult]
         project_name=project_name,
         report_title=report_title,
         allure_url=allure_url,
-        total_count=_to_int(total),
-        success_count=_to_int(success),
-        failure_count=_to_int(failed),
-        progress=process_redis.get_process(),
+        total_count=total_count,
+        success_count=success_count,
+        failure_count=failure_count,
+        progress=progress,
         failed_testcases_name=_format_failed_names(failed_names),
         start_time=start_time or "-",
         testcases=testcase_list,
