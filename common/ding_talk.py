@@ -108,7 +108,7 @@ def build_dingtalk_markdown(
         lines.append("> 开始时间：{}".format(start_time))
     if wallpaper_url:
         # Markdown 图片语法：![图片描述](图片地址)。
-        lines.append("> ![每日壁纸]({})".format(wallpaper_url))
+        lines.append("![每日壁纸]({})".format(wallpaper_url))
     if allure_url:
         # Allure 链接只有在 Jenkins URL 已配置时才展示。
         lines.extend([

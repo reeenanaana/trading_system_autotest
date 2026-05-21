@@ -1,8 +1,11 @@
 import datetime
+import logging
 import os
 from pathlib import Path
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 def get_now_time():
@@ -111,18 +114,27 @@ def get_everyday_wallpaper():
     从 Bing 获取每日壁纸
     :return: 壁纸图片完整 URL
     """
-    url = "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1"
+    urls = [
+        "https://cn.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN",
+        "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN",
+    ]
     headers = {
+        "Accept": "application/json",
         "User-Agent": "Mozilla/5.0"
     }
 
-    try:
-        res = requests.get(url, headers=headers, timeout=10).json()
-        wallpaper_url = "https://cn.bing.com" + res["images"][0]["url"]
-        return wallpaper_url
-    except Exception as e:
-        print("获取 Bing 壁纸失败:", e)
-        return None
+    for url in urls:
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            res = response.json()
+            wallpaper_url = res["images"][0]["url"]
+            if wallpaper_url.startswith("http"):
+                return wallpaper_url
+            return "https://cn.bing.com" + wallpaper_url
+        except (requests.RequestException, ValueError, KeyError, IndexError) as error:
+            logger.warning("获取 Bing 壁纸失败: %s, url=%s", error, url)
+    return None
 
 
 # ele_screenshot_path = get_project_path('trading_system_autotest') / 'img' / 'ele_screenshots' / ele_screenshot_name
