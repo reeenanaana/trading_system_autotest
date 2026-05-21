@@ -113,26 +113,6 @@ def pytest_collection_finish(session):
     test_start_time = get_now_date_time_str()
 
 
-# 作用：从测试函数的 docstring 中提取用例名称。
-# 用法：优先取 docstring 的第一行作为“测试用例”名称；如果没写 docstring，就用函数名兜底。
-def get_testcase_description(item):
-    # item.function 指向当前测试函数对象，__doc__ 是函数下方的三引号文档字符串。
-    # 业务场景：用例写了 docstring 时，通知里展示业务描述；没写时用函数名兜底。
-    doc = item.function.__doc__
-    if not doc:
-        return item.name
-    # strip() 去掉首尾空白，splitlines()[0] 只取第一行，避免多行 docstring 把通知撑得太长。
-    return doc.strip().splitlines()[0].strip()
-
-
-def get_report_description(report):
-    # xdist 会把 report.user_properties 从 worker 传回主进程，用它保留业务用例名称。
-    for name, value in getattr(report, "user_properties", []):
-        if name == "description" and value:
-            return value
-    return getattr(report, "description", report.nodeid)
-
-
 # 作用：整个 pytest 会话结束后触发一次。
 # pytest_sessionfinish 是 pytest 约定好的 Hook 函数名。
 # pytest 在运行过程中会在固定生命周期节点主动查找并调用这些 Hook。只要你在 conftest.py 里定义了：pytest 就会自动注册它，并在 整个测试 session 即将结束时 调用它。
@@ -172,8 +152,6 @@ def pytest_runtest_makereport(item, call):
     result = yield
     # result.get_result() 取出 pytest 为当前阶段生成的测试报告对象。
     report = result.get_result()
-    report.description = get_testcase_description(item)
-    report.user_properties.append(("description", report.description))
 
     if report.when == 'call' and report.failed:
         # report.when 有 setup/call/teardown 三种阶段。
@@ -196,15 +174,14 @@ def pytest_runtest_logreport(report):
     if CURRENT_PROCESS_IS_XDIST_WORKER or report.when != 'call':
         return
 
-    description = get_report_description(report)
     if report.failed:
         # 更新失败用例个数
         process_redis.update_failed()
-        # 增加失败用例的名称到报告用例中的description
-        process_redis.insert_into_failed_testcases_name(description)
+        # 失败用例名称使用 pytest 原生 nodeid，不干预 Allure 的 description。
+        process_redis.insert_into_failed_testcases_name(report.nodeid)
         # 把当前失败用例转换成统一数据模型，交给后续通知摘要使用。
         testcase_results.append(TestCaseResult(
-            name=description,
+            name=report.nodeid,
             outcome=report.outcome,
             # getattr(obj, "attr", default) 表示安全读取属性；没有 duration 时返回 0.0。
             duration=getattr(report, "duration", 0.0),
@@ -215,7 +192,7 @@ def pytest_runtest_logreport(report):
         process_redis.update_success()
         # 成功用例也记录下来，后续如果通知需要展示用例明细或耗时，可以直接复用。
         testcase_results.append(TestCaseResult(
-            name=description,
+            name=report.nodeid,
             outcome=report.outcome,
             duration=getattr(report, "duration", 0.0),
         ))
